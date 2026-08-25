@@ -1,0 +1,18 @@
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uilds/
+[Rr]eleases/
+[Ll]ogs/
+UserSettings/
+.vscode/
+*.csproj
+*.sln
+*.log
+
+# Keep local model iterations out of Git. The private repository retains only the
+# exact model used by the committed scene, stored through Git LFS.
+Assets/Characters/*.vrm
+Assets/Characters/*.vrm.meta
+!Assets/Characters/current.vrm
+!Assets/Characters/current.vrm.meta

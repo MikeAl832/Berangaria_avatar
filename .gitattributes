@@ -1,0 +1,9 @@
+Assets/Characters/current.vrm filter=lfs diff=lfs merge=lfs -text
+*.bat text eol=crlf
+*.cs text eol=lf
+*.json text eol=lf
+*.meta text eol=lf whitespace=-blank-at-eol
+*.unity text eol=lf whitespace=-blank-at-eol
+*.asset text eol=lf whitespace=-blank-at-eol
+# UniVRM is vendored unchanged; preserve its upstream whitespace.
+Packages/** whitespace=-blank-at-eol,-blank-at-eof
