@@ -12,10 +12,11 @@ if not exist "%AVATAR_EXE%" (
     exit /b 1
 )
 
-start "Berangaria Avatar" "%AVATAR_EXE%"
+start "Berangaria Avatar" "%AVATAR_EXE%" -screen-fullscreen 0 -force-d3d11 -force-d3d11-bitblt-model
 exit /b 0
 
 :help
 echo Usage: start-avatar.bat
 echo Starts the local Berangaria Avatar Windows build.
+echo Ctrl+Shift+F8 toggles placement mode; drag to move and use the wheel to scale.
 exit /b 0

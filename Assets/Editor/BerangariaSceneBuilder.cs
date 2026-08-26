@@ -39,7 +39,7 @@ namespace Berangaria.Avatar.Editor
             EditorSceneManager.OpenScene(SceneAssetPath, OpenSceneMode.Single);
 
             var character = GameObject.Find("Berangaria");
-            if (character != null)
+            if (character != null && !Application.isBatchMode)
             {
                 Selection.activeGameObject = character;
                 SceneView.lastActiveSceneView?.FrameSelected();
@@ -69,6 +69,16 @@ namespace Berangaria.Avatar.Editor
             if (vrm == null || animator == null || animator.avatar == null || !animator.avatar.isHuman)
             {
                 throw new InvalidOperationException("The configured avatar is not a valid VRM humanoid.");
+            }
+
+            var availableMuscles = HumanTrait.MuscleName.ToHashSet(StringComparer.Ordinal);
+            var missingMuscles = AvatarRig.RequiredMuscleNames
+                .Where(name => !availableMuscles.Contains(name))
+                .ToArray();
+            if (missingMuscles.Length > 0)
+            {
+                throw new InvalidOperationException(
+                    $"Required humanoid muscles are unavailable: {string.Join(", ", missingMuscles)}");
             }
 
             var expressions = string.Join(",", vrm.Vrm.Expression.Clips
@@ -109,7 +119,6 @@ namespace Berangaria.Avatar.Editor
 
                 var camera = CreateCamera(bounds);
                 CreateLighting();
-                CreateGround(bounds);
 
                 var gazeTargetObject = new GameObject("Gaze Target");
                 gazeTargetObject.transform.SetParent(camera.transform, false);
@@ -120,6 +129,7 @@ namespace Berangaria.Avatar.Editor
                 demoController.Configure(avatarRig);
                 var udpBridge = runtimeObject.AddComponent<AvatarUdpBridge>();
                 udpBridge.Configure(avatarRig, demoController);
+                runtimeObject.AddComponent<DesktopOverlayWindow>();
 
                 RenderSettings.ambientMode = UnityEngine.Rendering.AmbientMode.Trilight;
                 RenderSettings.ambientSkyColor = new Color(0.42f, 0.46f, 0.56f);
@@ -128,8 +138,8 @@ namespace Berangaria.Avatar.Editor
 
                 PlayerSettings.colorSpace = ColorSpace.Linear;
                 PlayerSettings.productName = "Berangaria Avatar";
-                PlayerSettings.defaultScreenWidth = 1280;
-                PlayerSettings.defaultScreenHeight = 720;
+                PlayerSettings.defaultScreenWidth = 560;
+                PlayerSettings.defaultScreenHeight = 900;
 
                 EditorSceneManager.MarkSceneDirty(scene);
                 EditorSceneManager.SaveScene(scene, SceneAssetPath);
@@ -178,12 +188,13 @@ namespace Berangaria.Avatar.Editor
             var camera = cameraObject.AddComponent<Camera>();
             camera.tag = "MainCamera";
             camera.clearFlags = CameraClearFlags.SolidColor;
-            camera.backgroundColor = new Color(0.035f, 0.042f, 0.060f);
+            camera.backgroundColor = new Color(0f, 0f, 0f, 0f);
             camera.fieldOfView = 30f;
             camera.nearClipPlane = 0.03f;
             camera.farClipPlane = 100f;
 
-            var distance = Mathf.Max(1.0f, bounds.size.y * 1.14f);
+            // Leave headroom for spring-bone hair instead of framing the static bounds edge-to-edge.
+            var distance = Mathf.Max(1.0f, bounds.size.y * 1.28f);
             cameraObject.transform.position = target + new Vector3(0f, 0f, distance);
             cameraObject.transform.LookAt(target);
             return camera;
@@ -208,26 +219,5 @@ namespace Berangaria.Avatar.Editor
             fillObject.transform.rotation = Quaternion.Euler(18f, -45f, 0f);
         }
 
-        private static void CreateGround(Bounds bounds)
-        {
-            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);
-            ground.name = "Ground";
-            ground.transform.position = new Vector3(bounds.center.x, 0f, bounds.center.z);
-            var scale = Mathf.Max(0.5f, bounds.size.y * 0.22f);
-            ground.transform.localScale = new Vector3(scale, 1f, scale);
-
-            var shader = Shader.Find("Standard");
-            if (shader == null)
-            {
-                return;
-            }
-
-            var material = new Material(shader)
-            {
-                name = "Ground Material",
-                color = new Color(0.08f, 0.09f, 0.12f),
-            };
-            ground.GetComponent<Renderer>().sharedMaterial = material;
-        }
     }
 }

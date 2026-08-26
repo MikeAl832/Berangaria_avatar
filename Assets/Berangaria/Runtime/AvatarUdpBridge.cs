@@ -17,6 +17,7 @@ namespace Berangaria.Avatar.Runtime
             public long seq;
             public string state;
             public float speech;
+            public string emotion;
         }
 
         [SerializeField] private AvatarRig rig;
@@ -36,6 +37,8 @@ namespace Berangaria.Avatar.Runtime
         private float _lastMessageAt = float.NegativeInfinity;
         private long _lastSequence;
         private AvatarState _lastLoggedState;
+        private AvatarEmotion _lastLoggedEmotion;
+        private bool _hasLoggedEmotion;
 
         public bool IsConnected => _connected;
         public int Port => port;
@@ -100,6 +103,7 @@ namespace Berangaria.Avatar.Runtime
                 _connected = false;
                 rig.SetState(AvatarState.Idle);
                 rig.SetSpeechLevel(0f);
+                rig.SetEmotion(AvatarEmotion.Neutral);
                 demoController?.SetExternalControl(enabled: true, connected: false);
                 Debug.LogWarning("BERANGARIA_AVATAR_BRIDGE_TIMEOUT");
             }
@@ -136,6 +140,17 @@ namespace Berangaria.Avatar.Runtime
             _lastMessageAt = Time.unscaledTime;
             rig.SetState(state);
             rig.SetSpeechLevel(Mathf.Clamp01(message.speech));
+            if (!string.IsNullOrWhiteSpace(message.emotion)
+                && Enum.TryParse(message.emotion, ignoreCase: true, out AvatarEmotion emotion))
+            {
+                rig.SetEmotion(emotion);
+                if (!_hasLoggedEmotion || emotion != _lastLoggedEmotion)
+                {
+                    _hasLoggedEmotion = true;
+                    _lastLoggedEmotion = emotion;
+                    Debug.Log($"BERANGARIA_AVATAR_BRIDGE_EMOTION emotion={emotion}");
+                }
+            }
             demoController?.SetExternalControl(enabled: true, connected: true);
 
             if (!_hasLoggedState || state != _lastLoggedState)

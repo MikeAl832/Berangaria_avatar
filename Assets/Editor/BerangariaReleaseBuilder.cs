@@ -14,15 +14,18 @@ namespace Berangaria.Avatar.Editor
         [MenuItem("Berangaria/Build Windows Avatar")]
         public static void BuildWindows()
         {
-            BerangariaSceneBuilder.Build();
+            // Replacing the VRM rebuilds the tracked scene. A player build should only
+            // validate it, otherwise Unity regenerates thousands of unrelated file IDs.
+            BerangariaSceneBuilder.ValidateRuntimeScene();
 
             PlayerSettings.productName = "Berangaria Avatar";
-            PlayerSettings.bundleVersion = "0.1.0";
+            PlayerSettings.bundleVersion = "0.2.3";
             PlayerSettings.runInBackground = true;
-            PlayerSettings.resizableWindow = true;
+            PlayerSettings.resizableWindow = false;
+            PlayerSettings.useFlipModelSwapchain = false;
             PlayerSettings.fullScreenMode = FullScreenMode.Windowed;
-            PlayerSettings.defaultScreenWidth = 1280;
-            PlayerSettings.defaultScreenHeight = 720;
+            PlayerSettings.defaultScreenWidth = 560;
+            PlayerSettings.defaultScreenHeight = 900;
 
             var absoluteOutputPath = Path.GetFullPath(Path.Combine(Application.dataPath, "..", OutputPath));
             Directory.CreateDirectory(Path.GetDirectoryName(absoluteOutputPath));

@@ -88,7 +88,7 @@ namespace Berangaria.Avatar.Editor
                     var previewPath = CapturePreview(Camera.main);
                     Debug.Log(
                         $"BERANGARIA_PLAYMODE_SMOKE_OK state={rig.State} " +
-                        $"speech={rig.SpeechLevel:0.000} preview={previewPath}");
+                        $"emotion={rig.Emotion} speech={rig.SpeechLevel:0.000} preview={previewPath}");
                     Finish(0, null);
                 }
                 catch (Exception exception)

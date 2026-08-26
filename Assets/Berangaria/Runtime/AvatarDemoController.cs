@@ -8,10 +8,11 @@ namespace Berangaria.Avatar.Runtime
         [SerializeField] private AvatarRig rig;
         [SerializeField] private bool cycleStates = true;
         [SerializeField, Min(2f)] private float secondsPerState = 4.5f;
-        [SerializeField] private bool showOverlay = true;
+        [SerializeField] private bool showOverlay;
 
         private float _cycleStartedAt;
         private AvatarState _manualState = AvatarState.Idle;
+        private AvatarEmotion _manualEmotion = AvatarEmotion.Calm;
         private bool _externalControl;
         private bool _externalConnected;
 
@@ -40,6 +41,7 @@ namespace Berangaria.Avatar.Runtime
             }
 
             _cycleStartedAt = Time.time;
+            rig?.SetEmotion(AvatarEmotion.Calm);
             ApplyState(AvatarState.Idle);
         }
 
@@ -79,6 +81,7 @@ namespace Berangaria.Avatar.Runtime
             if (Input.GetKeyDown(KeyCode.Alpha2)) SetManualState(AvatarState.Listening);
             if (Input.GetKeyDown(KeyCode.Alpha3)) SetManualState(AvatarState.Thinking);
             if (Input.GetKeyDown(KeyCode.Alpha4)) SetManualState(AvatarState.Speaking);
+            if (Input.GetKeyDown(KeyCode.E)) CycleEmotion();
         }
 
         private void SetManualState(AvatarState state)
@@ -93,7 +96,33 @@ namespace Berangaria.Avatar.Runtime
             if (rig != null && rig.State != state)
             {
                 rig.SetState(state);
+                if (!_externalControl && cycleStates)
+                {
+                    rig.SetEmotion(DemoEmotion(state));
+                }
             }
+        }
+
+        private static AvatarEmotion DemoEmotion(AvatarState state)
+        {
+            switch (state)
+            {
+                case AvatarState.Listening:
+                    return AvatarEmotion.Calm;
+                case AvatarState.Thinking:
+                    return AvatarEmotion.Bored;
+                case AvatarState.Speaking:
+                    return AvatarEmotion.Confident;
+                default:
+                    return AvatarEmotion.Calm;
+            }
+        }
+
+        private void CycleEmotion()
+        {
+            var emotionCount = System.Enum.GetValues(typeof(AvatarEmotion)).Length;
+            _manualEmotion = (AvatarEmotion)(((int)_manualEmotion + 1) % emotionCount);
+            rig?.SetEmotion(_manualEmotion);
         }
 
         private void OnGUI()
@@ -104,7 +133,7 @@ namespace Berangaria.Avatar.Runtime
             }
 
             const float width = 350f;
-            const float height = 126f;
+            const float height = 148f;
             var rect = new Rect(18f, 18f, width, height);
             GUI.Box(rect, GUIContent.none);
 
@@ -120,13 +149,14 @@ namespace Berangaria.Avatar.Runtime
                 normal = { textColor = new Color(0.88f, 0.91f, 0.97f) },
             };
 
-            GUI.Label(new Rect(32f, 28f, width - 28f, 25f), "Berangaria Avatar Runtime v0.1", titleStyle);
+            GUI.Label(new Rect(32f, 28f, width - 28f, 25f), "Berangaria Avatar Runtime v0.2.3", titleStyle);
             GUI.Label(
                 new Rect(32f, 56f, width - 28f, 22f),
                 $"State: {rig.State}   Speech: {rig.SpeechLevel:0.00}   Control: {ControlLabel()}",
                 labelStyle);
-            GUI.Label(new Rect(32f, 80f, width - 28f, 20f), "1 Idle   2 Listening   3 Thinking   4 Speaking", labelStyle);
-            GUI.Label(new Rect(32f, 101f, width - 28f, 20f), "Space: demo cycle   F1: hide panel", labelStyle);
+            GUI.Label(new Rect(32f, 80f, width - 28f, 20f), $"Emotion: {rig.Emotion}", labelStyle);
+            GUI.Label(new Rect(32f, 101f, width - 28f, 20f), "1 Idle   2 Listening   3 Thinking   4 Speaking", labelStyle);
+            GUI.Label(new Rect(32f, 122f, width - 28f, 20f), "Space: demo cycle   E: emotion   F1: hide panel", labelStyle);
         }
 
         private string ControlLabel()
